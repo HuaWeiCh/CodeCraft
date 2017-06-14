@@ -1,0 +1,74 @@
+#include "deploy.h"
+
+char  topo_file[1000*MAX_PATH_NUM];   //输出的字符数组
+long  miniCostUntilNow;								//初始化在deploy_server函数内
+long	minCost=INF;										//记录每次最小费用流的总费用
+int	  MaxFlow=0;											//最大流合格性检测
+
+int		dis[1002];				//spfa函数中到各点最短距离的记录数组
+int 	pre[1002];				//spfa函数中前向节点的记录数组
+bool	ifVisited[1002];	//spfa函数中记录节点是否访问过
+
+int					FeasiblePath[MAX_PATH_NUM][1000];	//潜在最优路径
+int					FeasiblePathNum=0;								//路径计数
+stack<int>	bestPath[MAX_PATH_NUM];						//目前为止最优路径
+int					bestPathNum=0;										//路径计数
+
+int nodeNum;										//普通节点数
+int linkNum;										//链路数目
+int consumNodeNum;							//消费节点数
+int serverPrice;								//服务器单价
+//int FeasibleServiceTable[1000];	//存储可能的服务器节点 号
+//int FeasibleServiceTableNum;		//存储可能的服务器节点Num
+
+int  indexOfconNode[1000];//根据相邻的 节点号 索引消费节点
+Node node[1000];					//初始化在读取nodeNum后，在dataCatch
+ConsumNode conNode[500];	//初始化在读取consumNodeNum后，在dataCatch
+
+int 	serviceTableNum=0;	//每次插入的服务器个数
+int 	serviceTable[500];
+
+//long long searchCount=1;
+//---------------------------------------------------------------------------------
+//你要完成的功能总入口
+//---------------------------------------------------------------------------------
+void deploy_server(char * topo[MAX_EDGE_NUM], int line_num,char * filename)
+{
+	initial(topo,line_num);
+	
+	bestPathNum=consumNodeNum;
+	miniCostUntilNow=serverPrice*consumNodeNum;//设置每个消费节点一个服务器的 初始状态
+	for(int i=0;i<bestPathNum;i++)
+	{
+		bestPath[i].push(conNode[i].demand);
+		bestPath[i].push(i);
+		bestPath[i].push(conNode[i].linkNode);
+	}
+	
+	//遍历不同排列组合下的最小费用
+	insertSuperT();//设置超级汇点,超级原点的设置在Permutations函数中
+
+	//for(int i=1;i<consumNodeNum;i++)	Permutations(i);//取全组合的方式
+  //for(int i=0;i<consumNodeNum;i++)  searchCount *=conNode[i].feasibleServiceNodeNum;
+  //printf("searchCount:%ld\n",searchCount);
+
+	geneticAlgorithm(consumNodeNum);//遗传算法
+
+	//if(searchCount<165535)dfsForTraversal(0);//dfs优化组合的方式
+	//dfsForTraversal(0);//dfs优化组合的方式
+	//printResult();//打印到屏幕有写入文件有冲突
+	//printf("totally Done!\n");
+
+	//记录需要输出的内容
+	record_result(topo_file);
+
+	//直接调用输出文件的方法输出到指定文件中
+	write_result(topo_file,filename);
+}
+
+
+
+
+
+
+

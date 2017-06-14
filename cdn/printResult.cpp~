@@ -1,0 +1,51 @@
+#include "deploy.h"
+
+/*********************************************************************
+**********结果输转化函数:完成路径等信息，按示例格式 写入字符串********
+	//ps请注意格式的正确性，如果有解:
+	//第一行只有一个数据;
+	//第二行为空;
+	//第三行开始才是具体的数据，数据之间用一个空格分隔开.
+*********************************************************************/
+void record_result(char* str)	//这里忽略了：“NA”情况的出现
+{
+	size_t sizeStr=sizeof(str);
+  size_t len = 0;
+  
+  if (len > (sizeStr - 10))	return;//是否超出
+
+	len += sprintf(topo_file + len,"%d",bestPathNum);
+	len += sprintf(topo_file + len,"\n");
+	
+  for(int i=0;i<bestPathNum;i++)
+  {
+  	len += sprintf(topo_file + len,"\n");
+  	//---------格式奇怪是为了满足如例程的输出形式----------
+  	len += sprintf(topo_file + len,"%d",bestPath[i].top());
+  	bestPath[i].pop();
+  	while(!bestPath[i].empty())
+  	{
+  		len += sprintf(topo_file + len," ");
+  		len += sprintf(topo_file + len,"%d",bestPath[i].top());
+  		bestPath[i].pop();
+  	}
+  }
+}
+/*********************************************************************
+***********打印结果函数:用于调试是输出，和record_result有冲突***********
+*********************************************************************/
+void printResult()
+{
+	printf("Print path:%d\n",bestPathNum);
+	printf("MinCost:%d\n",miniCostUntilNow);
+	for(int i=0;i<bestPathNum;i++)
+  {
+		while(!bestPath[i].empty())
+		{
+			printf("%4d ",bestPath[i].top());
+			bestPath[i].pop();
+		}
+		printf("\n");
+	}
+}
+

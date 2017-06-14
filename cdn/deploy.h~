@@ -1,0 +1,109 @@
+#ifndef __ROUTE_H__
+#define __ROUTE_H__
+
+#include "lib_io.h"
+#include <iostream>
+#include <string.h>
+#include "lib_io.h"
+#include "lib_time.h"
+#include <stdio.h>
+#include <queue>
+#include <stack>
+#include<cstdlib>
+#include<time.h>
+using namespace std;
+
+#define MAX_PATH_NUM 50000
+#define INF 60000
+//************************************Graph*****************************************
+//消费节点的存储
+struct ConsumNode
+{
+	int linkNode;	//相邻节点号
+	int demand;		//消费需求
+  int feasibleServiceNodeNum;
+  int feasibleServiceNode[1000];
+};
+
+//链路及节点的存储
+struct Node
+{
+	int  linkedNum;						//与之有直接连接的节点数
+	int  state[20];						//capacity de yuan shi zhuang tai
+	int  linkedNode[20];			//存储与之有直接连接的节点
+	int  cost[20];						//对应于 与之有直接连接的节点 之间 链路的 单位网络租用费
+	int  capacity[20];				//对应于 与之有直接连接的节点 之间 链路的 总带宽
+	int  reachedConNodeNum;		//记录能达到的消费节点个数
+	int	 reachedConNode[500];	//记录所能到达的消费节点
+};
+//************************************遗传算法*****************************************
+struct GeneChain						//一个个体
+{
+	float		rate;							//所处位置的累计比率
+	long		cost;							//本条基因的费用
+	int			gene[500];				//定义基因链:即染色体
+	int			childGene[500];		//子代基因链
+};
+//***************************************************************************
+extern char topo_file[1000*MAX_PATH_NUM];	//输出的字符数组
+
+extern long	miniCostUntilNow;
+extern long	minCost;
+extern int	MaxFlow;
+
+extern int 	dis[1002];				//spfa函数中到各点最短距离的记录数组
+extern int 	pre[1002];				//spfa函数中前向节点的记录数组
+extern bool ifVisited[1002];	//spfa函数中记录节点是否访问过
+
+extern int					FeasiblePath[MAX_PATH_NUM][1000];	//潜在最优路径
+extern int					FeasiblePathNum;									//路径计数
+extern stack<int>		bestPath[MAX_PATH_NUM];						//目前为止最优路径
+extern int					bestPathNum;											//路径计数
+
+extern int 	nodeNum;										//普通节点数
+extern int 	linkNum;										//链路数目
+extern int 	consumNodeNum;							//消费节点数
+extern int 	serverPrice;								//服务器单价
+extern int	FeasibleServiceTable[1000];	//存储可能的服务器节点 号
+extern int  FeasibleServiceTableNum;		//存储可能的服务器节点Num
+extern int  indexOfconNode[1000];				//根据相邻的 节点号 索引消费节点
+extern Node node[1000];									//初始化在读取nodeNum后，在dataCatch
+extern ConsumNode conNode[500];					//初始化在读取consumNodeNum后，在dataCatch
+
+extern int 	serviceTableNum;	//每次插入的服务器个数
+extern int 	serviceTable[500];
+//----------------graph.cpp---------------------
+void initial(char* graph[MAX_EDGE_NUM],int edge_num);//预处理
+void dataCatch(char* graph[MAX_EDGE_NUM],int edge_num);
+void sortBaedOnCost();
+void initFeasibleNode();
+void dfs(int topNode,int demand,int n);
+
+//---------minCostMaxFlow----------
+bool spfa(int s,int t);
+int minCostMaxFlow(int s,int t);
+
+//---------dfsForTraversal---------
+void dfsForTraversal(int deepCount);
+void copeWith(int serviceNum);
+
+//--------permutations.cpp---------
+//void Permutations(int n);
+//bool isCnLegal(int* Cn,int n);
+void insertSuperSource(int* a,int len);
+void freeSuperSource();
+void insertSuperT();
+//void combine_decrease(int* arr, int start, int* result, int count, const int NUM);
+
+//--------geneticAlgorithm.cpp---------
+void geneticAlgorithm(int& geneLength);
+void Xover(GeneChain& a,GeneChain& b,int& geneLength);
+void initFirstGeneration(int& length);
+void fitnessFunction();
+void swapArray(int& a,int& b,int length);
+//------------------------------deploy.cpp------------------------------------
+void record_result(char* str);
+void printResult();
+void deploy_server(char * graph[MAX_EDGE_NUM], int edge_num, char * filename);
+
+#endif

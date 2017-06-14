@@ -1,0 +1,132 @@
+#include "deploy.h"
+
+int reWriteStandard;
+
+bool spfa(int s,int t)
+{
+	int u,v;
+	queue<int>q;
+	
+	//spfa初始化
+  for(int i=0;i<nodeNum+2;i++)  pre[i]=-1;
+  for(int i=0;i<nodeNum+2;i++)  dis[i]=INF;
+  for(int i=0;i<nodeNum+2;i++)  ifVisited[i]=false;
+
+	dis[s] = 0;
+	ifVisited[s] = true;
+	q.push(s);          //superSource入队
+	
+	//spfa初始化，或重写数组内一些数据，均放在spfa函数外
+	while(!q.empty())
+	{
+		u = q.front();
+		q.pop();
+		ifVisited[u] = false;//release from queue q
+
+		for(int i = 0; i < node[u].linkedNum; i++)
+		{
+			v = node[u].linkedNode[i];
+			if((node[u].capacity[i]>0) && (dis[v] > dis[u]+node[u].cost[i]))
+			{
+				dis[v] = dis[u] + node[u].cost[i];
+				pre[v] = u;				//用于前向搜索
+				if(!ifVisited[v])
+				{
+					q.push(v);
+					ifVisited[v]=true;
+				}
+			}
+		}
+	}
+	if(dis[t] == INF)	return false;
+
+	return true;
+}
+
+int minCostMaxFlow(int s,int t)
+{
+	int	count;
+	int flow = 0; // 总流量
+	int minflow;
+
+
+  if(FeasiblePathNum>0)
+  {
+    for(int i=0,j;i<FeasiblePathNum;i++)//重新初始化FeasiblePath及计数
+	  {
+		  j=0;
+		  while(FeasiblePath[i][j] != -1){FeasiblePath[i][j]=-1;j++;}
+	  }
+	  FeasiblePathNum=0;
+  }
+
+	//spfa初始化:每次费用流的首次，以后重写数据将有所不同
+  //for(int i=0;i<nodeNum+2;i++)  pre[i]=-1;
+  //for(int i=0;i<nodeNum+2;i++)  dis[i]=INF;
+  //for(int i=0;i<nodeNum+2;i++)  ifVisited[i]=false;
+
+	//spfa(s,t);
+	while(spfa(s,t))
+	{
+		minflow = INF + 1;
+		for(int i = pre[t],j = t;i != s;i = pre[i])
+		{
+      for(int k=0;k<node[i].linkedNum;k++)
+      {
+        if(node[i].linkedNode[k]==j)
+        {
+          if(node[i].capacity[k] < minflow)
+					{
+						minflow = node[i].capacity[k];
+						//reWriteStandard = dis[j];
+						//cout<<reWriteStandard<<" ";
+					}
+        }
+      }
+			j=i;
+		}
+    //cout<<endl;
+
+		flow += minflow;
+		minCost += dis[t] * minflow;
+
+		//以下为记录路径等信息
+		FeasiblePath[FeasiblePathNum][0]=minflow;//加入本条路的流量
+		FeasiblePath[FeasiblePathNum][1]=indexOfconNode[pre[t]];//加入消费节点
+		count=2;
+		for(int i = pre[t],j = t;i != s;i = pre[i])
+		{
+      for(int k=0;k<node[i].linkedNum;k++)
+      {
+        if(node[i].linkedNode[k]==j)
+        {
+			    node[i].capacity[k] -= minflow;
+			    FeasiblePath[FeasiblePathNum][count]=i;
+			    count++;
+        }
+      }
+			j=i;
+		}
+
+		//重写数组，为下次spfa做准备
+		//for(int i=0;i<nodeNum+2;i++)  pre[i]=-1;
+		//printf("reWriteStandard:%d\n",reWriteStandard);
+		//for(int i=0;i<nodeNum+2;i++)  dis[i]=INF;
+		//for(int i=0;i<nodeNum+2;i++)  if(dis[i]>=reWriteStandard)dis[i]=INF;
+
+		//for(int i=0;i<nodeNum+2;i++)  ifVisited[i]=false;
+
+/*		for(int i=0;i<nodeNum+2;i++)
+		{
+			if(dis[i]>=reWriteStandard)
+				{pre[i]=-1;dis[i]=INF;ifVisited[i]=false;}
+		}
+
+		cout<<"dis:";
+		for(int i=0;i<nodeNum+2;i++) cout<<dis[i]<<" ";
+		cout<<endl;*/
+
+		FeasiblePathNum++;
+	}
+	return	flow;// 最大流
+}
